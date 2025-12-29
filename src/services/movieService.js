@@ -21,3 +21,15 @@ export async function updateMovie(id, movieData) {
   const response = await AxiosConfig.put(`${RESOURCE}/${id}`, movieData);
   return response.data;
 }
+
+export async function deleteMovie(id) {
+  await AxiosConfig.delete(`${RESOURCE}/${id}`);
+}
+
+export async function likeMovie(id) {
+  await AxiosConfig.put(`${RESOURCE}/${id}/like`);
+}
+
+export async function dislikeMovie(id) {
+  await AxiosConfig.put(`${RESOURCE}/${id}/dislike`);
+}

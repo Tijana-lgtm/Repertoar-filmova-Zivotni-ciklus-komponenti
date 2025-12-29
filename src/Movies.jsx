@@ -4,6 +4,7 @@ import Movie from "./Movie";
 import MovieForm from "./MovieForm";
 import { useEffect } from "react";
 import { createMovie, updateMovie, getMovieById, getAllMovies } from "./services/movieService";
+import { likeMovie, dislikeMovie, deleteMovie } from "./services/movieService";
 
 const MOVIES = [
   {
@@ -96,22 +97,46 @@ useEffect(() => {
   };
 }, []);
 
-  const updateLikes = (key) => {
-  setMovies(prev => {
-    const newMovies = [...prev];
-    newMovies[key].likes = (newMovies[key].likes || 0) + 1;
-    return newMovies;
-  });
-};
+  const updateLikes = async (key) => {
+    try {
+      const movieId =movies[key].id;
+      await likeMovie(movieId);
 
-const updateDislikes = (key) => {
-  setMovies(prev => {
+      setMovies(prev => {
+      const newMovies = [...prev];
+      newMovies[key].likes = (newMovies[key].likes || 0) + 1;
+      return newMovies;
+      });
+    }
+    catch (err) {
+      console.error ("Greska pri lajkovanju filma", err);
+    }
+  };
+  
+
+const updateDislikes =  async (key) => {
+  try {
+    const movieId = movies[key].id;
+    await dislikeMovie (movieId);
+
+    setMovies(prev => {
     const newMovies = [...prev];
     newMovies[key].dislikes = newMovies[key].dislikes + 1;
     return newMovies;
+    });
+  }
+  catch (err) {
+      console.error ("Greska pri dislajkovanju filma", err);
+    }
+  };
+
+  const updateMoviesAfterDelete = (key) => {
+  setMovies(prev => {
+    const newMovies = [...prev];
+    newMovies.splice(key, 1);
+    return newMovies;
   });
 };
-
   
  if (loading) {
     return (
@@ -209,6 +234,7 @@ const editMovie = async (editedMovie, key) => {
           movieId={movie.id}
           updateLikes={updateLikes}     
           updateDislikes={updateDislikes}
+          updateMoviesAfterDelete={updateMoviesAfterDelete}
           title={movie.name} 
           hall={movie.hall} 
           price={movie.price}

@@ -2,9 +2,10 @@ import React from "react";
 import { useState } from "react";
 import "./Movie.css";
 import { useNavigate } from "react-router-dom";
+import { deleteMovie } from "./services/movieService";
 
 
-const Movie = ({ movieKey, movieId, title, hall, price, poster, likes, dislikes, updateLikes, updateDislikes }) => {
+const Movie = ({ movieKey, movieId, title, hall, price, poster, likes, dislikes, updateLikes, updateDislikes, updateMoviesAfterDelete}) => {
   
   const navigate = useNavigate();
 
@@ -18,6 +19,15 @@ const Movie = ({ movieKey, movieId, title, hall, price, poster, likes, dislikes,
 
   const handleEdit = () => {
     navigate(`/movies/edit/${movieId}`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteMovie(movieId);
+      updateMoviesAfterDelete(movieKey);
+    } catch (err) {
+      console.error("Greska pri brisanju filma", err);
+    }
   };
 
   const defaultPrice = 300;
@@ -40,6 +50,7 @@ const Movie = ({ movieKey, movieId, title, hall, price, poster, likes, dislikes,
         <div className="buttons">
           <button onClick={handleLike}>Like</button>
           <button onClick={handleDislike}>Dislike</button>
+          <button onClick={handleDelete}>Delete</button>
           <p>Likes: {likes}</p>
           <p>Dislikes: {dislikes}</p>
           <button onClick={handleEdit}>Edit</button>
