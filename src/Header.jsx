@@ -7,9 +7,10 @@ const Header = () => {
     <header className="header">
       <h1>🎬 Repertoar Filmova</h1>
       <nav>
-        <Link to="/">Pocetna</Link>
-        <Link to="/movies">Filmovi</Link>
-        <Link to="/about">O aplikaciji</Link>
+        <Link to="/">Home</Link> | 
+        <Link to="/about">About</Link> | 
+        <Link to="/movies">Movies</Link> |
+        <Link to="/movies/add">Add Movie</Link>
       </nav>
     </header>
   );

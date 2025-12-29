@@ -3,6 +3,7 @@ import { useState } from "react";
 import Movie from "./Movie";
 import MovieForm from "./MovieForm";
 import { useEffect } from "react";
+import { createMovie, updateMovie, getMovieById, getAllMovies } from "./services/movieService";
 
 const MOVIES = [
   {
@@ -46,24 +47,46 @@ const MOVIES = [
 
 const Movies = () => {
 
-  const [movies, setMovies] = useState(MOVIES);
+  const [movies, setMovies] = useState([]);
   const [topMovie, setTopMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const date = new Date().toLocaleDateString('sr-RS');
 
   useEffect(() => {
-  let bestMovie = movies[0];
-  let bestScore = movies[0].likes - movies[0].dislikes;
+    loadMovies();
+  }, []);
 
-  movies.forEach((movie, index) => {
-    const score = movie.likes - movie.dislikes;
-    if (score > bestScore) {
-      bestScore = score;
-      bestMovie = { ...movie, index };
+  const loadMovies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAllMovies();
+      setMovies(data);
+    } catch (err) {
+      setError("Greska pri ucitavanju filmova. Proverite da li server radi.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  setTopMovie(bestMovie);
-}, [movies]);
+  useEffect(() => {
+    if (movies.length === 0) return;
+
+    let bestMovie = movies[0];
+    let bestScore = movies[0].likes - movies[0].dislikes;
+
+    movies.forEach((movie, index) => {
+      const score = movie.likes - movie.dislikes;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMovie = { ...movie, index };
+      }
+    });
+
+    setTopMovie(bestMovie);
+  }, [movies]);
 
 useEffect(() => {
   console.log("Postavka filmova");
@@ -90,30 +113,84 @@ const updateDislikes = (key) => {
 };
 
   
-  const addMovie = movie => {
-    setMovies(prev => [
-      ...prev,
-      {
-        title: movie.title,
-        hall: movie.hall,
-        price: movie.price,
-        poster: movie.url,
-        likes: Math.floor(Math.random() * 5) + 1,      
-        dislikes: Math.floor(Math.random() * 5) + 1    
-      }
-    ]);
-  };
+ if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ 
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto'
+        }}></div>
+        <p>Ucitavanje filmova...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
-  const editMovie = (editedMovie, key) => {
+  if (error) {
+    return (
+      <div style={{ color: 'red', padding: '20px', textAlign: 'center' }}>
+        <p>{error}</p>
+        <button onClick={loadMovies}>Pokusaj ponovo</button>
+      </div>
+    );
+  }
+
+  const addMovie = async (movie) => {
+  try {
+    const movieForApi = {
+      name: movie.title,
+      hall: movie.hall,
+      price: movie.price,
+      poster: movie.url,    
+      likes: 0,
+      dislikes: 0
+    };
+
+    const createdMovie = await createMovie(movieForApi);
+
+    setMovies(prev => [...prev, createdMovie]);
+  } catch (err) {
+    console.error("Greska pri dodavanju filma", err);
+  }
+};
+
+const editMovie = async (editedMovie, key) => {
+  try {
+    const movieId = movies[key].id;
+
+    const movieForApi = {
+      id: movieId,
+      name: editedMovie.title,
+      hall: editedMovie.hall,
+      price: editedMovie.price,
+      poster: editedMovie.poster,
+      likes: movies[key].likes,
+      dislikes: movies[key].dislikes
+    };
+
+    const updated = await updateMovie(movieId, movieForApi);
+
     setMovies(prev => {
-      const newMovies = [...prev]; 
-      newMovies[key].title = editedMovie.title;
-      newMovies[key].hall = editedMovie.hall;
-      newMovies[key].price = editedMovie.price;
-      newMovies[key].poster = editedMovie.poster;
-      return newMovies; 
+      const newMovies = [...prev];
+      newMovies[key] = updated;
+      return newMovies;
     });
-  };
+  } catch (err) {
+    console.error("Greska pri izmeni filma", err);
+  }
+};
+
+
 
   return (
     <div>
@@ -121,18 +198,18 @@ const updateDislikes = (key) => {
       {topMovie && (
       <div style={{ backgroundColor: '#FFD700', padding: '10px', marginBottom: '10px',}}>
       <h3>⭐ Najbolje ocenjen film:</h3>
-      <p><strong>{topMovie.title}</strong></p>
+      <p><strong>{topMovie.name}</strong></p>
       <p>Ocena: {topMovie.likes - topMovie.dislikes} (Likes: {topMovie.likes}, Dislikes: {topMovie.dislikes})</p>
     </div>
     )}
       {movies.map((movie, index) => (
         <Movie 
-          key={index}
+          key={movie.id}
           movieKey={index}
-          editMovie={editMovie}
+          movieId={movie.id}
           updateLikes={updateLikes}     
           updateDislikes={updateDislikes}
-          title={movie.title} 
+          title={movie.name} 
           hall={movie.hall} 
           price={movie.price}
           poster={movie.poster}
@@ -140,7 +217,6 @@ const updateDislikes = (key) => {
           dislikes={movie.dislikes}
         />
       ))}
-      <MovieForm handleMovie={addMovie} />
     </div>
   );
 };

@@ -1,12 +1,12 @@
 import React from "react";
 import { useState } from "react";
 import "./Movie.css";
-import MovieForm from "./MovieForm";
+import { useNavigate } from "react-router-dom";
 
-const Movie = ({ movieKey, title, hall, price, poster, editMovie, likes, dislikes, updateLikes, updateDislikes }) => {
+
+const Movie = ({ movieKey, movieId, title, hall, price, poster, likes, dislikes, updateLikes, updateDislikes }) => {
   
-  const [showForm, setShowForm] = useState(false);
-
+  const navigate = useNavigate();
 
   const handleLike = () => {
     updateLikes(movieKey); 
@@ -17,7 +17,7 @@ const Movie = ({ movieKey, title, hall, price, poster, editMovie, likes, dislike
   };
 
   const handleEdit = () => {
-    setShowForm(!showForm);
+    navigate(`/movies/edit/${movieId}`);
   };
 
   const defaultPrice = 300;
@@ -34,7 +34,7 @@ const Movie = ({ movieKey, title, hall, price, poster, editMovie, likes, dislike
           {hall !== undefined ? (
             <span>, sala: {hall}, cena: {displayPrice}din</span>
           ) : (
-            <span> Film još uvek nije u ponudi</span>
+            <span> Film jos uvek nije u ponudi</span>
           )}
         </div>
         <div className="buttons">
@@ -43,16 +43,6 @@ const Movie = ({ movieKey, title, hall, price, poster, editMovie, likes, dislike
           <p>Likes: {likes}</p>
           <p>Dislikes: {dislikes}</p>
           <button onClick={handleEdit}>Edit</button>
-          {showForm && (
-            <MovieForm 
-              handleMovie={editMovie} 
-              movieKey={movieKey} 
-              title={title} 
-              hall={hall} 
-              price={price} 
-              poster={poster}
-            />
-          )}
         </div>
       </div>
     </div>
